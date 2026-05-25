@@ -48,7 +48,7 @@ class ProductController extends Controller
             'description' => 'required',
             'price' => 'required|numeric|min:0',
             'stock' => 'required|integer|min:0',
-            'unit' => 'required|integer|min:0',
+            'unit' => 'required|string|max:50',
             'category_id' => 'required|exists:categories,id',
         ], [
             'product_name.required' => 'Nama produk wajib diisi.',
@@ -64,9 +64,7 @@ class ProductController extends Controller
             'stock.integer' => 'Stock harus berupa angka bulat.',
             'stock.min' => 'Stock tidak boleh minus.',
 
-            'unit.required' => 'Unit wajib diisi.',
-            'unit.integer' => 'Unit harus berupa angka bulat.',
-            'unit.min' => 'Unit tidak boleh minus.',
+            'unit.required' => 'Unit/Satuan wajib diisi.',
 
             'category_id.required' => 'Kategori harus dipilih.',
             'category_id.exists' => 'Kategori tidak valid.',
@@ -120,7 +118,7 @@ class ProductController extends Controller
             'description' => 'required',
             'price' => 'required|numeric|min:0',
             'stock' => 'required|integer|min:0',
-            'unit' => 'required|integer|min:0',
+            'unit' => 'required|string|max:50',
             'category_id' => 'required|exists:categories,id',
         ], [
             'product_name.required' => 'Nama produk wajib diisi.',
@@ -132,9 +130,7 @@ class ProductController extends Controller
             'stock.required' => 'Stock wajib diisi.',
             'stock.integer' => 'Stock harus berupa angka bulat.',
             'stock.min' => 'Stock tidak boleh minus.',
-            'unit.required' => 'Unit wajib diisi.',
-            'unit.integer' => 'Unit harus berupa angka bulat.',
-            'unit.min' => 'Unit tidak boleh minus.',
+            'unit.required' => 'Unit/Satuan wajib diisi.',
             'category_id.required' => 'Kategori harus dipilih.',
             'category_id.exists' => 'Kategori tidak valid.',
         ]);

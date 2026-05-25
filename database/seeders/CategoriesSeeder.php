@@ -15,20 +15,20 @@ class CategoriesSeeder extends Seeder
     {
         DB::table('categories')->insert([
             [
-                'category_name' => 'Supercar',
-                'description' => 'Mobil dengan performa tinggi, desain aerodinamis, dan teknologi canggih yang menawarkan pengalaman berkendara yang luar biasa.',
+                'category_name' => 'Sayuran',
+                'description' => 'Bahan pangan nabati yang berasal dari berbagai bagian tumbuhan (seperti daun, batang, bunga, umbi, atau biji).',
             ],
             [
-                'category_name' => 'Hypercar',
-                'description' => 'Mobil dengan performa sangat tinggi, desain yang inovatif, dan teknologi canggih yang memungkinkan kecepatan dan akselerasi luar biasa.',
+                'category_name' => 'Lauk Pauk',
+                'description' => 'Berbagai jenis hidangan pendamping makanan pokok (seperti nasi) yang berfungsi sebagai penambah cita rasa, variasi, serta pemenuhan gizi seimbang.',
             ],
             [
-                'category_name' => 'SUV',
-                'description' => 'Mobil dengan kapasitas muatan yang besar, kemampuan off-road yang baik, dan kenyamanan yang superior.',
+                'category_name' => 'Makanan Pokok',
+                'description' => 'Makanan yang dikonsumsi secara rutin sebagai menu utama dan menjadi sumber karbohidrat untuk memenuhi sebagian besar kebutuhan energi harian tubuh.',
             ],
             [
-                'category_name' => 'Sedan',
-                'description' => 'Mobil dengan desain yang elegan, kenyamanan yang baik, dan performa yang seimbang untuk penggunaan sehari-hari.',
+                'category_name' => 'Bumbu Dapur',
+                'description' => 'Berbagai jenis bahan tanaman, rempah, atau hasil olahan yang digunakan untuk menyedapkan dan membangkitkan selera makan.',
             ]
         ]);
     }

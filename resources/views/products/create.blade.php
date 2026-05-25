@@ -52,7 +52,7 @@
 
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-2">Unit/Satuan</label>
-                            <input type="number" name="unit" min="0" value="{{ old('unit') }}" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
+                            <input type="text" name="unit" placeholder="Contoh: Kg, Pcs, Ml" value="{{ old('unit') }}" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
                         </div>
                     </div>
 
