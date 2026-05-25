@@ -15,9 +15,9 @@ return new class extends Migration
             $table->id();
             $table->integer('transaction_no');
             $table->date('date');
-            $table->string('cust_name');
-            $table->decimal('total_price', 10, 2);
-            $table->enum('status', ['pending', 'success', 'cancelled']);
+            $table->string('customer_name');
+            $table->decimal('total_amount', 10, 2);
+            $table->enum('status', ['pending', 'completed', 'cancelled']);
             $table->timestamps();
         });
     }
