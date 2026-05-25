@@ -4,24 +4,42 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\CategoryController;
+use App\Models\Product;
+use App\Models\Transaction;
 
 Route::get('/', function () {
     return view('welcome');
 });
 
-Route::resource('transactions', TransactionController::class);
+Route::resource('categories', CategoryController::class);
 Route::resource('products', ProductController::class);
-Route::get('/transactions/{id}/edit', [TransactionController::class, 'edit'])->name('transactions.edit');
-Route::patch('/transactions/{id}', [TransactionController::class, 'update'])->name('transactions.update');
-Route::delete('/transactions/{id}', [TransactionController::class, 'destroy'])->name('transactions.destroy');
-Route::get('/products/{id}/edit', [ProductController::class, 'edit'])->name('products.edit');
-Route::patch('/products/{id}', [ProductController::class, 'update'])->name('products.update');
-Route::delete('/products/{id}', [ProductController::class, 'destroy'])->name('products.destroy');
-Route::get('/products/create', [ProductController::class, 'create'])->name('products.create');
-Route::post('/products/store', [ProductController::class, 'store'])->name('products.store');
+Route::resource('transactions', TransactionController::class);
 
 Route::get('/dashboard', function () {
-    return view('dashboard');
+
+    $products = Product::all();
+
+    $productCount = Product::count();
+    $categoryCount = \App\Models\Categories::count();
+    $totalStock = Product::sum('stock');
+
+    $pendingCount = Transaction::where('status', 'pending')->count();
+
+    $cancelledCount = Transaction::where('status', 'cancelled')->count();
+
+    $completedCount = Transaction::where('status', 'completed')->count();
+
+    return view('dashboard', compact(
+        'products',
+        'productCount',
+        'categoryCount',
+        'totalStock',
+        'pendingCount',
+        'cancelledCount',
+        'completedCount'
+    ));
+
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
