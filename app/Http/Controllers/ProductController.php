@@ -14,21 +14,18 @@ class ProductController extends Controller
     /**
      * Display a listing of the resource.
      */
-public function index(Request $request)
+    public function index(Request $request)
     {
         $search = $request->search;
 
         $products = Product::with('category')
             ->when($search, function ($query) use ($search) {
-                $query->where('name', 'like', '%' . $search . '%');
-            });
+                $query->where('product_name', 'like', '%' . $search . '%');
+            })
+            ->paginate(5)
+            ->withQueryString();
 
-            $pendingCount = Transaction::where('status', 'pending')->count();
-            $cancelledCount = Transaction::where('status', 'cancelled')->count();
-            $completedCount = Transaction::where('status', 'completed')->count();
-            $productCount = Product::count();
-
-            return view('products.index', compact('products','pendingCount','cancelledCount','completedCount','productCount', 'search'));
+        return view('products.index', compact('products', 'search'));
     }
 
     /**
