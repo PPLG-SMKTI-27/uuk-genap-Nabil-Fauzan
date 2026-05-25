@@ -3,14 +3,27 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use app\Models\Transaction;
+use App\Models\Transaction;
 
 class TransactionDetail extends Model
 {
-    protected $fillable = ['quantity', 'price', 'subtotal'];
+    protected $table = 'transaction_detail';
+
+    protected $fillable = [
+        'transaction_id',
+        'product_id',
+        'quantity',
+        'unit_price',
+        'subtotal'
+    ];
 
     public function transaction()
     {
-        return $this->belongsTo(Transaction::class);
+        return $this->belongsTo(Transaction::class, 'transaction_id');
+    }
+
+    public function product()
+    {
+        return $this->belongsTo(Product::class, 'product_id');
     }
 }
