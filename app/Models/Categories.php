@@ -7,10 +7,10 @@ use App\Models\Product;
 
 class Categories extends Model
 {
-     protected $fillable = ['name', 'description'];
+     protected $fillable = ['category_name', 'description'];
 
      public function products()
      {
-         return $this->hasMany(Product::class);
+         return $this->hasMany(Product::class, 'category_id');
      }
 }
