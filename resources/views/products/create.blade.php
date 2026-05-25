@@ -1,69 +1,76 @@
-<!DOCTYPE html>
-<html>
-<head>
-   <title>Form Produk</title>
-</head>
-<body>
+<x-app-layout>
+    <x-slot name="header">
+        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+            {{ __('Tambah Barang Baru') }}
+        </h2>
+    </x-slot>
 
-<h2>Form Produk</h2>
+    <div class="py-12">
+        <div class="max-w-xl mx-auto sm:px-6 lg:px-8">
+            <div class="bg-white overflow-hidden shadow-sm sm:rounded-2xl border border-gray-150 p-6">
+                <!-- Errors -->
+                @if($errors->any())
+                    <div class="mb-6 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 rounded text-sm">
+                        <ul class="list-disc pl-5">
+                            @foreach($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
 
-<a href="/products">Kembali</a>
+                <form action="{{ route('products.store') }}" method="POST" class="space-y-6">
+                    @csrf
 
-<br><br>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Nama Barang</label>
+                        <input type="text" name="product_name" value="{{ old('product_name') }}" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
+                    </div>
 
-@if($errors->any())
-   <ul style="color: red">
-       @foreach($errors->all() as $error)
-           <li>{{ $error }}</li>
-       @endforeach
-   </ul>
-@endif
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Kategori</label>
+                        <select name="category_id" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
+                            <option value="">-- Pilih Kategori --</option>
+                            @foreach($categories as $category)
+                                <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>
+                                    {{ $category->category_name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
 
-<form action="/products/store" method="POST">
-   @csrf
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Harga (Rupiah)</label>
+                            <input type="number" name="price" step="0.01" min="0" value="{{ old('price') }}" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
+                        </div>
 
-   <label>Nama Produk</label><br>
-    <input type="text" name="product_name">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Stok</label>
+                            <input type="number" name="stock" min="0" value="{{ old('stock') }}" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
+                        </div>
 
-   <br><br>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Unit/Satuan</label>
+                            <input type="number" name="unit" min="0" value="{{ old('unit') }}" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
+                        </div>
+                    </div>
 
-   <label>Deskripsi Produk</label><br>
-   <textarea name="description"></textarea>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Deskripsi Barang</label>
+                        <textarea name="description" rows="4" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>{{ old('description') }}</textarea>
+                    </div>
 
-    <br><br>
-
-    <label>Harga</label><br>
-    <input type="number" name="price" step="0.1">
-
-    <br><br>
-
-    <label>Stok</label><br>
-    <input type="number" name="stock">
-
-    <br><br>
-
-    <label>Unit</label><br>
-    <input type="number" name="unit">
-
-    <br><br>
-
-   <label>Tanggal</label><br>
-   <input type="date" name="date">
-
-   <br><br>
-
-   <label>Kategori</label><br>
-   <select name="category_id">
-       <option value="">-- Pilih Kategori --</option>
-       <option value="1">Supercar</option>
-       <option value="2">Hypercar</option>
-       <option value="3">SUV</option>
-   </select>
-
-   <br><br>
-
-   <button type="submit">Simpan</button>
-</form>
-
-</body>
-</html>
+                    <div class="flex justify-between items-center pt-4 border-t border-gray-100">
+                        <a href="{{ route('products.index') }}" class="text-sm font-semibold text-gray-600 hover:text-gray-900">
+                            &larr; Kembali
+                        </a>
+                        <button type="submit" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg shadow-md shadow-indigo-150 transition">
+                            Simpan Barang
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</x-app-layout>
