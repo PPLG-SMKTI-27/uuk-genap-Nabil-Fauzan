@@ -46,24 +46,46 @@ public function index(Request $request)
      */
     public function store(Request $request)
     {
-       $request->validate([
-           'product_name' => [
-               'required',
-               Rule::unique('products')->where(function ($query) use ($request) {
-                   return $query
-                       ->where('product_name', $request->product_name);
-               }),
-           ],
-           'category_id' => 'required|exists:categories,id',
-       ], [
-           'product_name.unique' => 'Produk sudah ada.',
+        $request->validate([
+            'product_name' => 'required|unique:products,product_name',
+            'description' => 'required',
+            'price' => 'required|numeric|min:0',
+            'stock' => 'required|integer|min:0',
+            'unit' => 'required|integer|min:0',
+            'category_id' => 'required|exists:categories,id',
+        ], [
+            'product_name.required' => 'Nama produk wajib diisi.',
+            'product_name.unique' => 'Produk sudah ada.',
+
+            'description.required' => 'Deskripsi wajib diisi.',
+
+            'price.required' => 'Harga wajib diisi.',
+            'price.numeric' => 'Harga harus berupa angka.',
+            'price.min' => 'Harga tidak boleh minus.',
+
+            'stock.required' => 'Stock wajib diisi.',
+            'stock.integer' => 'Stock harus berupa angka bulat.',
+            'stock.min' => 'Stock tidak boleh minus.',
+
+            'unit.required' => 'Unit wajib diisi.',
+            'unit.integer' => 'Unit harus berupa angka bulat.',
+            'unit.min' => 'Unit tidak boleh minus.',
+
             'category_id.required' => 'Kategori harus dipilih.',
             'category_id.exists' => 'Kategori tidak valid.',
-       ]);
+        ]);
 
-       Product::create($request->only('product_name', 'category_id', 'date', 'status'));
+        Product::create([
+            'product_name' => $request->product_name,
+            'description' => $request->description,
+            'price' => $request->price,
+            'stock' => $request->stock,
+            'unit' => $request->unit,
+            'category_id' => $request->category_id,
+        ]);
 
-       return redirect('/products.index')->with('success', 'Produk berhasil disimpan.');
+        return redirect()->route('products.index')
+            ->with('success', 'Produk berhasil disimpan.');
     }
 
     /**
@@ -94,16 +116,45 @@ public function index(Request $request)
     public function update(Request $request, string $id)
     {
         $request->validate([
-            'product_name' => 'required',
+            'product_name' => [
+                'required',
+                Rule::unique('products', 'product_name')->ignore($id),
+            ],
             'description' => 'required',
-            'price' => 'required',
-            'category_id' => 'required',
+            'price' => 'required|numeric|min:0',
+            'stock' => 'required|integer|min:0',
+            'unit' => 'required|integer|min:0',
+            'category_id' => 'required|exists:categories,id',
+        ], [
+            'product_name.required' => 'Nama produk wajib diisi.',
+            'product_name.unique' => 'Produk sudah ada.',
+            'description.required' => 'Deskripsi wajib diisi.',
+            'price.required' => 'Harga wajib diisi.',
+            'price.numeric' => 'Harga harus berupa angka.',
+            'price.min' => 'Harga tidak boleh minus.',
+            'stock.required' => 'Stock wajib diisi.',
+            'stock.integer' => 'Stock harus berupa angka bulat.',
+            'stock.min' => 'Stock tidak boleh minus.',
+            'unit.required' => 'Unit wajib diisi.',
+            'unit.integer' => 'Unit harus berupa angka bulat.',
+            'unit.min' => 'Unit tidak boleh minus.',
+            'category_id.required' => 'Kategori harus dipilih.',
+            'category_id.exists' => 'Kategori tidak valid.',
         ]);
 
         $product = Product::findOrFail($id);
-        $product->update($request->all());
+        $product->update([
+            'product_name' => $request->product_name,
+            'description' => $request->description,
+            'price' => $request->price,
+            'stock' => $request->stock,
+            'unit' => $request->unit,
+            'category_id' => $request->category_id,
+        ]);
+
         return redirect()->route('products.index')
-            ->with('success', 'Product updated successfully.');}
+            ->with('success', 'Produk berhasil diupdate.');
+    }
 
     /**
      * Remove the specified resource from storage.
@@ -113,6 +164,7 @@ public function index(Request $request)
        $product = Product::findOrFail($id);
        $product->delete();
 
-       return redirect('/products')->with('success', 'Produk berhasil dihapus.');
+        return redirect()->route('products.index')
+            ->with('success', 'Produk berhasil dihapus.');
     }
 }

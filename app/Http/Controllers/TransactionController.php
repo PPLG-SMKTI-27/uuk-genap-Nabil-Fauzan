@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use App\Models\Transaction;
+use App\Models\Product;
+use App\Models\TransactionDetail;
 
 class TransactionController extends Controller
 {
@@ -18,18 +20,16 @@ class TransactionController extends Controller
         $Transactions = Transaction::with('transactionDetails.product.category')
             ->when($search, function ($query) use ($search) {
                 $query->whereHas('transactionDetails.product', function ($q) use ($search) {
-                    $q->where('name', 'like', '%' . $search . '%');
+                    $q->where('product_name', 'like', '%' . $search . '%');
                 });
             })
             ->latest()
             ->paginate(5)
             ->withQueryString();
 
-            $transactionCount = Transaction::where('status', 'pending')->count();
-            $transactionCount = Transaction::where('status', 'cancelled')->count();
-            $transactionCount = Transaction::where('status', 'completed')->count();
+        $transactionCount = Transaction::count();
 
-            return view('transaction.index', compact('Transactions','transactionCount'));
+        return view('transaction.index', compact('Transactions', 'transactionCount', 'search'));
     }
 
     /**
@@ -37,9 +37,9 @@ class TransactionController extends Controller
      */
     public function create()
     {
-        $transactions = Transaction::orderBy('id')->get();
+        $products = Product::all();
 
-        return view('transaction.create', compact('transactions'));
+        return view('transaction.create', compact('products'));
     }
 
     /**
@@ -48,25 +48,49 @@ class TransactionController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'transaction_no' => 'required',
-            'date' => 'required',
-            'customer_name' => 'required',
-            'total_amount' => 'required',
-            'status' => 'required',
+            'product_id' => 'required|exists:products,id',
+            'date' => 'required|date',
+            'status' => 'required|in:pending,completed,cancelled',
+            'customer_name' => 'nullable',
+            'quantity' => 'nullable|integer|min:1',
+        ], [
+            'product_id.required' => 'Produk wajib dipilih.',
+            'product_id.exists' => 'Produk tidak valid.',
+            'date.required' => 'Tanggal wajib diisi.',
+            'status.required' => 'Status wajib diisi.',
         ]);
 
-        Transaction::create($request->all());
+        $product = Product::findOrFail($request->product_id);
+        $quantity = $request->input('quantity', 1);
+        $total_amount = $product->price * $quantity;
+
+        if ($product->stock < $quantity) {
+            return redirect()->back()
+                ->withErrors(['quantity' => 'Stok produk tidak mencukupi.'])
+                ->withInput();
+        }
+
+        // Deduct product stock
+        $product->decrement('stock', $quantity);
+
+        $transaction = Transaction::create([
+            'transaction_no' => mt_rand(100000, 999999),
+            'date' => $request->date,
+            'customer_name' => $request->input('customer_name') ?: 'Umum',
+            'total_amount' => $total_amount,
+            'status' => $request->status,
+        ]);
+
+        TransactionDetail::create([
+            'transaction_id' => $transaction->id,
+            'product_id' => $request->product_id,
+            'quantity' => $quantity,
+            'unit_price' => $product->price,
+            'subtotal' => $total_amount,
+        ]);
 
         return redirect()->route('transactions.index')
-            ->with('success', 'Transaction created successfully.');
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
+            ->with('success', 'Transaksi berhasil disimpan.');
     }
 
     /**
@@ -74,10 +98,10 @@ class TransactionController extends Controller
      */
     public function edit(string $id)
     {
-       $transaction = Transaction::findOrFail($id);
-       $transaction = Transaction::all();
+        $transaction = Transaction::with('transactionDetails')->findOrFail($id);
+        $products = Product::all();
 
-       return view('transaction.edit', compact('transaction', 'students'));
+        return view('transaction.edit', compact('transaction', 'products'));
     }
 
     /**
@@ -85,27 +109,69 @@ class TransactionController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        $transaction = Transaction::findOrFail($id);
-
         $request->validate([
-            'transaction_id' => [
-                'required',
-                Rule::unique('transactions')->where(function ($query) use ($request, $id) {
-                    return $query->where('transaction_id', $request->transaction_id)
-                                 ->where('id', '!=', $id);
-                })->ignore($id),
-            ],
-            'date' => 'required',
-            'customer_name' => 'required',
-            'total_amount' => 'required',
-            'status' => 'required',
-        ], [
-            'transaction_id.unique' => 'The transaction ID has already been taken.',
+            'product_id' => 'required|exists:products,id',
+            'date' => 'required|date',
+            'status' => 'required|in:pending,completed,cancelled',
+            'customer_name' => 'nullable',
+            'quantity' => 'nullable|integer|min:1',
         ]);
 
-        $transaction->update($request->only('transaction_id', 'date', 'customer_name', 'total_amount', 'status'));
+        $transaction = Transaction::findOrFail($id);
+        $detail = $transaction->transactionDetails()->first();
 
-        return redirect('/transactions')->with('success', 'Transaction berhasil diperbarui.');
+        $product = Product::findOrFail($request->product_id);
+        $quantity = $request->input('quantity', 1);
+        $total_amount = $product->price * $quantity;
+
+        // Restore stock first
+        if ($detail) {
+            $oldProduct = Product::find($detail->product_id);
+            if ($oldProduct) {
+                $oldProduct->increment('stock', $detail->quantity);
+            }
+        }
+
+        // Check if new stock is sufficient
+        if ($product->stock < $quantity) {
+            // rollback restoration if failed
+            if ($detail && isset($oldProduct) && $oldProduct) {
+                $oldProduct->decrement('stock', $detail->quantity);
+            }
+            return redirect()->back()
+                ->withErrors(['quantity' => 'Stok produk tidak mencukupi.'])
+                ->withInput();
+        }
+
+        // Deduct new stock
+        $product->decrement('stock', $quantity);
+
+        $transaction->update([
+            'date' => $request->date,
+            'customer_name' => $request->input('customer_name') ?: 'Umum',
+            'total_amount' => $total_amount,
+            'status' => $request->status,
+        ]);
+
+        if ($detail) {
+            $detail->update([
+                'product_id' => $request->product_id,
+                'quantity' => $quantity,
+                'unit_price' => $product->price,
+                'subtotal' => $total_amount,
+            ]);
+        } else {
+            TransactionDetail::create([
+                'transaction_id' => $transaction->id,
+                'product_id' => $request->product_id,
+                'quantity' => $quantity,
+                'unit_price' => $product->price,
+                'subtotal' => $total_amount,
+            ]);
+        }
+
+        return redirect()->route('transactions.index')
+            ->with('success', 'Transaksi berhasil diperbarui.');
     }
 
     /**
@@ -113,9 +179,19 @@ class TransactionController extends Controller
      */
     public function destroy(string $id)
     {
-        $transaction = Transaction::findOrFail($id);
+        $transaction = Transaction::with('transactionDetails')->findOrFail($id);
+
+        // Restore stock
+        foreach ($transaction->transactionDetails as $detail) {
+            $product = Product::find($detail->product_id);
+            if ($product) {
+                $product->increment('stock', $detail->quantity);
+            }
+        }
+
         $transaction->delete();
 
-        return redirect('/transactions')->with('success', 'Transaction berhasil dihapus.');
+        return redirect()->route('transactions.index')
+            ->with('success', 'Transaksi berhasil dihapus.');
     }
 }
